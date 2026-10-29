@@ -70,16 +70,31 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .formLogin(form -> form.disable())
             .httpBasic(basic -> basic.disable())
+
             .sessionManagement(session -> session
                     .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
             .exceptionHandling(exceptions -> exceptions
                     .authenticationEntryPoint((request, response, exception) ->
                             response.sendError(
                                     401, "Authentication required")))
+
             .authorizeHttpRequests(auth -> auth
+                    // Public authentication endpoints
                     .requestMatchers("/api/auth/**").permitAll()
+
+                    // Public Swagger UI and OpenAPI documentation
+                    .requestMatchers(
+                            "/swagger-ui.html",
+                            "/swagger-ui/**",
+                            "/v3/api-docs/**"
+                    ).permitAll()
+
+                    // All remaining endpoints require authentication
                     .anyRequest().authenticated())
+
             .authenticationProvider(authenticationProvider)
+
             .addFilterBefore(
                     jwtAuthenticationFilter,
                     UsernamePasswordAuthenticationFilter.class);
