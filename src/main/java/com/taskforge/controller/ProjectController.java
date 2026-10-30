@@ -1,6 +1,6 @@
 package com.taskforge.controller;
 
-import java.util.List;
+import java.util.Set;
 
 import jakarta.validation.Valid;
 
@@ -18,6 +18,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.taskforge.dto.ProjectRequest;
 import com.taskforge.dto.ProjectResponse;
 import com.taskforge.service.ProjectService;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/api/projects")
@@ -40,9 +46,19 @@ public class ProjectController {
 
     // Get all projects
     @GetMapping
-    public List<ProjectResponse> getAllProjects() {
+    public Page<ProjectResponse> getAllProjects(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction) {
 
-        return projectService.getAllProjects();
+        Pageable pageable = createPageable(
+                page,
+                size,
+                sortBy,
+                direction);
+
+        return projectService.getAllProjects(pageable);
     }
 
     // Get a project by ID
@@ -68,5 +84,47 @@ public class ProjectController {
     public void deleteProject(@PathVariable Long id) {
 
         projectService.deleteProject(id);
+    }
+    
+    private Pageable createPageable(
+            int page,
+            int size,
+            String sortBy,
+            String direction) {
+
+        if (page < 0) {
+            throw new IllegalArgumentException(
+                    "Page number cannot be negative");
+        }
+
+        if (size < 1 || size > 100) {
+            throw new IllegalArgumentException(
+                    "Page size must be between 1 and 100");
+        }
+
+        Set<String> allowedSortFields = Set.of(
+                "createdAt",
+                "name"
+        );
+
+        if (!allowedSortFields.contains(sortBy)) {
+            throw new IllegalArgumentException(
+                    "Invalid sort field: " + sortBy);
+        }
+
+        if (!direction.equalsIgnoreCase("asc")
+                && !direction.equalsIgnoreCase("desc")) {
+
+            throw new IllegalArgumentException(
+                    "Sort direction must be 'asc' or 'desc'");
+        }
+
+        Sort.Direction sortDirection =
+                Sort.Direction.fromString(direction);
+
+        return PageRequest.of(
+                page,
+                size,
+                Sort.by(sortDirection, sortBy));
     }
 }

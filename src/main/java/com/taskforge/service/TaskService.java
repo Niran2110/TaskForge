@@ -2,20 +2,21 @@ package com.taskforge.service;
 
 import java.util.List;
 
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.taskforge.dto.TaskRequest;
 import com.taskforge.dto.TaskResponse;
 import com.taskforge.entity.AppUser;
-import com.taskforge.entity.OrganizationRole;
 import com.taskforge.entity.Project;
 import com.taskforge.entity.Task;
 import com.taskforge.exception.ResourceNotFoundException;
 import com.taskforge.repository.AppUserRepository;
 import com.taskforge.repository.ProjectRepository;
 import com.taskforge.repository.TaskRepository;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 public class TaskService {
@@ -73,6 +74,39 @@ public class TaskService {
     public List<TaskResponse> getAllTasks() {
 
         return searchTasks(null, null, null, null);
+    }
+    
+    @Transactional(readOnly = true)
+    public Page<TaskResponse> getTasks(
+            Pageable pageable,
+            Long projectId,
+            com.taskforge.entity.TaskStatus status,
+            com.taskforge.entity.TaskPriority priority,
+            Long assigneeId) {
+
+        List<Long> organizationIds =
+                organizationAccessService.getAccessibleOrganizationIds();
+
+        if (organizationIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        if (projectId != null) {
+
+            Project project = findProject(projectId);
+
+            organizationAccessService.requireMembership(
+                    project.getOrganization().getId());
+        }
+
+        return taskRepository.searchTasksPaginated(
+                        organizationIds,
+                        projectId,
+                        status,
+                        priority,
+                        assigneeId,
+                        pageable)
+                .map(this::convertToResponse);
     }
 
     @Transactional(readOnly = true)

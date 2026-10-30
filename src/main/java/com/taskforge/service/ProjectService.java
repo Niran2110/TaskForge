@@ -14,6 +14,9 @@ import com.taskforge.exception.ResourceNotFoundException;
 import com.taskforge.repository.OrganizationRepository;
 import com.taskforge.repository.ProjectRepository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Service
 public class ProjectService {
 
@@ -69,6 +72,21 @@ public class ProjectService {
                 .stream()
                 .map(this::convertToResponse)
                 .toList();
+    }
+    
+    @Transactional(readOnly = true)
+    public Page<ProjectResponse> getAllProjects(Pageable pageable) {
+
+        List<Long> organizationIds =
+                organizationAccessService.getAccessibleOrganizationIds();
+
+        if (organizationIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        return projectRepository
+                .findByOrganization_IdIn(organizationIds, pageable)
+                .map(this::convertToResponse);
     }
 
     @Transactional(readOnly = true)
