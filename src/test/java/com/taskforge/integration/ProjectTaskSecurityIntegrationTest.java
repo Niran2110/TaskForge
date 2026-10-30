@@ -251,8 +251,8 @@ class ProjectTaskSecurityIntegrationTest {
                         )
         )
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$", hasSize(1)))
-        .andExpect(jsonPath("$[0].name").value("Project A"));
+        .andExpect(jsonPath("$.content", hasSize(1)))
+        .andExpect(jsonPath("$.content[0].name").value("Project A"));
     }
 
     @Test
@@ -267,8 +267,8 @@ class ProjectTaskSecurityIntegrationTest {
                         )
         )
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$", hasSize(1)))
-        .andExpect(jsonPath("$[0].title").value("Task A"));
+        .andExpect(jsonPath("$.content", hasSize(1)))
+        .andExpect(jsonPath("$.content[0].title").value("Task A"));
     }
 
     @Test

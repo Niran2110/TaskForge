@@ -11,7 +11,6 @@ import com.taskforge.entity.Organization;
 import com.taskforge.exception.ResourceConflictException;
 import com.taskforge.exception.ResourceNotFoundException;
 import com.taskforge.repository.OrganizationRepository;
-import com.taskforge.service.OrganizationMembershipService;
 
 @Service
 public class OrganizationService {
